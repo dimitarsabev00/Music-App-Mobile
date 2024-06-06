@@ -3,7 +3,10 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
 import { Pressable, useColorScheme } from "react-native";
 import Colors from "@/src/constants/Colors";
+import { View } from "@/src/components/Themed";
 import { useClientOnlyValue } from "@/src/components/useClientOnlyValue";
+import Player from "@/src/components/Player";
+import { BottomTabBar } from "@react-navigation/bottom-tabs";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -24,6 +27,12 @@ export default function TabLayout() {
         // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
       }}
+      tabBar={(props) => (
+        <View>
+          <Player />
+          <BottomTabBar {...props} />
+        </View>
+      )}
     >
       <Tabs.Screen
         name="index"
