@@ -1,22 +1,14 @@
-import { StyleSheet } from "react-native";
-import { Text, View } from "@/src/components/Themed";
+import { FlatList } from "react-native";
+import { tracks } from "@/src/data/tracks";
+import TrackListItem from "@/src/components/TrackListItem";
 
-export default function Home() {
+const Home = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
-    </View>
+    <FlatList
+      data={tracks}
+      renderItem={({ item }) => <TrackListItem track={item} />}
+    />
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-});
+export default Home;
