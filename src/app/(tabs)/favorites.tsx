@@ -1,22 +1,12 @@
-import { StyleSheet } from "react-native";
-import { Text, View } from "@/src/components/Themed";
+import TrackListItem from "@/src/components/TrackListItem";
+import { tracks } from "@/src/data/tracks";
+import { FlatList } from "react-native";
 
 export default function Favorites() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>List With Favorites</Text>
-    </View>
+    <FlatList
+      data={tracks}
+      renderItem={({ item }) => <TrackListItem track={item} />}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-});
