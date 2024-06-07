@@ -1,3 +1,10 @@
-schema @sdl(files: ["auth/index.graphql", "recommendations/index.graphql"]) {
+schema
+  @sdl(
+    files: [
+      "auth/index.graphql"
+      "recommendations/index.graphql"
+      "search/index.graphql"
+    ]
+  ) {
   query: Query
 }
