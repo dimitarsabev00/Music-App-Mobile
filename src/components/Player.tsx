@@ -29,16 +29,17 @@ const Player = () => {
   };
 
   useEffect(() => {
-    if (playTrack) {
-      handlePlayTrack();
-    }
-
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
+    handlePlayTrack();
   }, [playTrack]);
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
 
   if (!playTrack) {
     return null;
@@ -62,6 +63,7 @@ const Player = () => {
       await sound.playAsync();
     }
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.player}>
@@ -89,7 +91,7 @@ const Player = () => {
         >
           <Ionicons
             onPress={handlePauseTrack}
-            name={isPlaying ? "play" : "pause"}
+            name={isPlaying ? "pause" : "play"}
             size={22}
             color={playTrack?.preview_url ? "white" : "gray"}
           />
