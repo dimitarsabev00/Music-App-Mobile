@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, Image } from "react-native";
 
 import { Track } from "../Types";
+import { usePlayerContext } from "../contexts/PlayerContext";
 
 type TrackListItemProps = {
   track: Track;
@@ -10,11 +11,10 @@ type TrackListItemProps = {
 const TrackListItem: React.FC<TrackListItemProps> = ({ track }) => {
   const image = track.album?.images?.[0];
 
+  const { setPlayTrack } = usePlayerContext();
+  
   return (
-    <Pressable
-      onPress={() => console.log("Playing track: ", track.id)}
-      style={styles.container}
-    >
+    <Pressable onPress={() => setPlayTrack(track)} style={styles.container}>
       {image && <Image source={{ uri: image.url }} style={styles.image} />}
       <View>
         <Text style={styles.title}>{track.name}</Text>
