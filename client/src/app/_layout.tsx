@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import PlayerContext from "../contexts/PlayerContext";
+import ApolloClientContext from "../contexts/ApolloClientContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -47,15 +48,17 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <ThemeProvider value={DarkTheme}>
-      <PlayerContext>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Custom Modal" }}
-          />
-        </Stack>
-      </PlayerContext>
+      <ApolloClientContext>
+        <PlayerContext>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Custom Modal" }}
+            />
+          </Stack>
+        </PlayerContext>
+      </ApolloClientContext>
     </ThemeProvider>
   );
 }
