@@ -1,14 +1,64 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { usePlayerContext } from "../contexts/PlayerContext";
-import { useEffect, useState } from "react";
-import { AVPlaybackStatus, Audio } from "expo-av";
-import { Sound } from "expo-av/build/Audio";
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { usePlayerContext } from '../contexts/PlayerContext';
+import { useEffect, useState } from 'react';
+import { AVPlaybackStatus, Audio } from 'expo-av';
+import { Sound } from 'expo-av/build/Audio';
+import { gql, useMutation, useQuery } from '@apollo/client';
+
+const insertFavoriteMutation = gql`
+  mutation MyMutation($userId: String!, $trackId: String!) {
+    insertFavorites(userid: $userId, trackid: $trackId) {
+      id
+      trackid
+      userid
+    }
+  }
+`;
+
+const removeFavoriteMutation = gql`
+  mutation MyMutation($trackId: String!, $userId: String!) {
+    deleteFavorites(trackid: $trackId, userid: $userId) {
+      id
+    }
+  }
+`;
+
+const isFavoriteQuery = gql`
+  query MyQuery($trackId: String!, $userId: String!) {
+    favoritesByTrackidAndUserid(trackid: $trackId, userid: $userId) {
+      id
+      trackid
+      userid
+    }
+  }
+`;
 
 const Player = () => {
-  const [sound, setSound] = useState<Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [sound, setSound] = useState<Sound>();
+  const [isPlaying, setIsPlaying] = useState(false);
   const { playTrack } = usePlayerContext();
+
+  const [insertFavorite] = useMutation(insertFavoriteMutation);
+  const [removeFavorite] = useMutation(removeFavoriteMutation);
+
+  const { data, refetch } = useQuery(isFavoriteQuery, {
+    variables: { userId: 'cknxcdjqn7', trackId: playTrack?.id || '' },
+  });
+  const isLiked = data?.favoritesByTrackidAndUserid?.length > 0;
+
+  useEffect(() => {
+    handlePlayTrack();
+  }, [playTrack]);
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log('Unloading Sound');
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
 
   const handlePlayTrack = async () => {
     if (sound) {
@@ -18,32 +68,14 @@ const Player = () => {
     if (!playTrack?.preview_url) {
       return;
     }
-
     const { sound: newSound } = await Audio.Sound.createAsync({
       uri: playTrack.preview_url,
     });
-    setSound(newSound);
 
+    setSound(newSound);
     newSound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
     await newSound.playAsync();
   };
-
-  useEffect(() => {
-    handlePlayTrack();
-  }, [playTrack]);
-
-  useEffect(() => {
-    return sound
-      ? () => {
-          console.log("Unloading Sound");
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
-
-  if (!playTrack) {
-    return null;
-  }
 
   const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (!status.isLoaded) {
@@ -52,11 +84,11 @@ const Player = () => {
 
     setIsPlaying(status.isPlaying);
   };
-  const handlePauseTrack = async () => {
+
+  const onPlayPause = async () => {
     if (!sound) {
       return;
     }
-
     if (isPlaying) {
       await sound.pauseAsync();
     } else {
@@ -64,15 +96,30 @@ const Player = () => {
     }
   };
 
+  const onLike = async () => {
+    if (!playTrack) return;
+    if (isLiked) {
+      await removeFavorite({
+        variables: { userId: 'cknxcdjqn7', trackId: playTrack.id },
+      });
+    } else {
+      await insertFavorite({
+        variables: { userId: 'cknxcdjqn7', trackId: playTrack.id },
+      });
+    }
+    refetch();
+  };
+
+  if (!playTrack) {
+    return null;
+  }
+
+  const image = playTrack.album.images?.[0];
+
   return (
     <View style={styles.container}>
       <View style={styles.player}>
-        {playTrack.album.images?.[0] && (
-          <Image
-            source={{ uri: playTrack.album.images?.[0].url }}
-            style={styles.image}
-          />
-        )}
+        {image && <Image source={{ uri: image.url }} style={styles.image} />}
 
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{playTrack.name}</Text>
@@ -80,22 +127,19 @@ const Player = () => {
         </View>
 
         <Ionicons
-          name={"heart-outline"}
+          onPress={onLike}
+          name={isLiked ? 'heart' : 'heart-outline'}
           size={20}
-          color={"white"}
+          color={'white'}
           style={{ marginHorizontal: 10 }}
         />
-        <TouchableOpacity
+        <Ionicons
+          onPress={onPlayPause}
           disabled={!playTrack?.preview_url}
-          onPress={handlePlayTrack}
-        >
-          <Ionicons
-            onPress={handlePauseTrack}
-            name={isPlaying ? "pause" : "play"}
-            size={22}
-            color={playTrack?.preview_url ? "white" : "gray"}
-          />
-        </TouchableOpacity>
+          name={isPlaying ? 'pause' : 'play'}
+          size={22}
+          color={playTrack?.preview_url ? 'white' : 'gray'}
+        />
       </View>
     </View>
   );
@@ -103,30 +147,30 @@ const Player = () => {
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    width: "100%",
+    position: 'absolute',
     top: -75,
+    width: '100%',
     height: 75,
     padding: 10,
   },
   player: {
-    backgroundColor: "#286660",
+    backgroundColor: '#286660',
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 5,
     padding: 3,
     paddingRight: 15,
   },
   title: {
-    color: "white",
+    color: 'white',
   },
   subtitle: {
-    color: "lightgray",
+    color: 'lightgray',
     fontSize: 12,
   },
   image: {
-    height: "100%",
+    height: '100%',
     aspectRatio: 1,
     marginRight: 10,
     borderRadius: 5,
